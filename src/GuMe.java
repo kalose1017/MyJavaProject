@@ -5,7 +5,8 @@ public class GuMe {
 	static String[] Product = new String[100]; // 구매할 품목의 이름
 	static float[] Money = new float[100]; // 구매할 품목의 가격
 	static int[] BuyCount = new int[100]; // 구매할 품목의 갯수
-	static double cost = 0; // 이익금에서 차감할 원가
+	static double cost = 0; // 이익금에서 차감할 구매액
+	static int SaveCount = 0; // 리스트에 저장한 품목 수
 	
 	public static void Buy()
 	{
@@ -19,7 +20,7 @@ public class GuMe {
 		try {
 			if(Count > 0 && Count <= 100)
 			{
-				for(int i = 0; i < Count; i++)
+				for(int i = SaveCount; i < Count + SaveCount; i++)
 				{
 					System.out.print((i + 1) + "번째 폼목의 이름을 입력하세요. : ");
 					Product[i] = BuyProductSc.nextLine();
@@ -30,6 +31,7 @@ public class GuMe {
 					
 					cost += (Money[i] * BuyCount[i]);
 				}
+				SaveCount += Count; // 리스트에 저장된 항목의 갯수를 확인해서 다음 입력시 이어서 입력하기 위해 저장
 			}
 			else {
 				System.out.println("갯수 입력이 잘못되었습니다. 다시 입력해주세요.");
@@ -48,7 +50,7 @@ public class GuMe {
 			Scanner sc = new Scanner(System.in);
 			System.out.println();
 			System.out.println("===== 구매 내역 =====");
-			for(int i = 0; i < Count; i++)
+			for(int i = 0; i < SaveCount; i++)
 			{
 				System.out.println("[" + (i + 1) + "번 항목]");
 				System.out.println("이름 : " + Product[i]);
