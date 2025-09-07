@@ -32,7 +32,7 @@ public class SearchingProduct {
 	            }
 	            while(true)
 	            {
-	            	System.out.print("구매할 상품을 선택하십시오.(뒤로가기 : 0) : ");
+	            	System.out.print("구매할 상품을 선택하십시오.(나가기 : 0) : ");
 	            	String input = sc.nextLine();
 	            	try {
 	            		choose = Integer.parseInt(input);

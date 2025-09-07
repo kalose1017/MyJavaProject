@@ -26,7 +26,7 @@ public class Main {
 				System.out.println("2. 전체상품 조회");
 				System.out.println("3. 장바구니");
 				System.out.println("4. 마이페이지");
-				System.out.println("---------------------------------------");
+				System.out.println("-----------------------------------------");
 				System.out.print("서비스를 선택하세요.(종료 : 0 입력) : ");
 				String input = sc.nextLine();
 				try {
@@ -45,11 +45,10 @@ public class Main {
 					}
 					else if(choose == 0) 
 					{
-						System.out.println("시스템을 종료합니다.");
-						return;
+						System.out.println("프로그램 종료");
+                        System.exit(0);
 					}
 					else System.out.println("숫자를 다시 입력해주세요!");
-					choose = -1;
 				} 
 				catch (NumberFormatException e) {
 					System.out.println();
