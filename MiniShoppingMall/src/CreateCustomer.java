@@ -1,5 +1,3 @@
-import java.security.PublicKey;
-import java.security.interfaces.RSAKey;
 import java.sql.*;
 import java.util.Scanner;
 
@@ -14,49 +12,61 @@ public class CreateCustomer {
 		String sql = "INSERT INTO Customer " +
                 "(LoginID, LoginPW, NickName, PayCharge, TotalCharge, Grade) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
-		Scanner sc = new Scanner(System.in);
-		System.out.print("아이디를 입력하세요. : ");
-		ID = sc.nextLine();
-		System.out.print("닉네임을 입력하세요. : ");
-		NickName = sc.nextLine();
 		
-		// 비밀번호 입력 (4자리 이상 검증)
-		while(true)
+		try (Scanner sc = new Scanner(System.in);
+		     Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
+		     PreparedStatement ps = conn.prepareStatement(sql)) 
 		{
-			System.out.print("비밀번호를 입력하세요. (4자리 이상) : ");
-			PW = sc.nextLine();
-			if(PW.length() >= 4) break;
-			else System.out.println("비밀번호는 4자리 이상이어야 합니다. 다시 입력해주세요.");
-		}
-		
-		// 비밀번호 확인
-		while(true)
-		{
-			System.out.print("비밀번호를 다시 입력하세요. : ");
-			String rePW = sc.nextLine();
-			if(rePW.equals(PW)) break;
-			else System.out.println("비밀번호가 일치하지 않습니다! 다시 입력해주세요.");
-		}
+			// 아이디 입력 및 중복 확인
+			while(true) {
+				System.out.print("아이디를 입력하세요. : ");
+				ID = sc.nextLine();
+				
+				if(checkIdDuplicate(ID)) {
+					System.out.println("이미 사용 중인 아이디입니다. 다른 아이디를 입력해주세요.");
+					continue;
+				} else {
+					System.out.println("사용 가능한 아이디입니다.");
+					break;
+				}
+			}
+			
+			System.out.print("닉네임을 입력하세요. : ");
+			NickName = sc.nextLine();
+			
+			// 비밀번호 입력 (4자리 이상 검증)
+			while(true)
+			{
+				System.out.print("비밀번호를 입력하세요. (4자리 이상) : ");
+				PW = sc.nextLine();
+				if(PW.length() >= 4) break;
+				else System.out.println("비밀번호는 4자리 이상이어야 합니다. 다시 입력해주세요.");
+			}
+			
+			// 비밀번호 확인
+			while(true)
+			{
+				System.out.print("비밀번호를 다시 입력하세요. : ");
+				String rePW = sc.nextLine();
+				if(rePW.equals(PW)) break;
+				else System.out.println("비밀번호가 일치하지 않습니다! 다시 입력해주세요.");
+			}
+			ps.setString(1, ID); // 로그인ID 입력
+			ps.setString(2, PW); // 로그인PW 입력
+			ps.setString(3, NickName); // 닉네임입력
+			ps.setDouble(4, 0);
+			ps.setDouble(5, 0);
+			ps.setString(6, "Bronez");
 
-	    try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
-	       PreparedStatement ps = conn.prepareStatement(sql)) 
-	    {
-		   ps.setString(1, ID); // 로그인ID 입력
-		   ps.setString(2, PW); // 로그인PW 입력
-		   ps.setString(3, NickName); // 닉네임입력
-		   ps.setDouble(4, 0);
-		   ps.setDouble(5, 0);
-		   ps.setString(6, "Bronez");
-	
-	       int rows = ps.executeUpdate();   // 실행
-	       System.out.println("로그인 성공! 환영합니다, " + NickName + "님");
-	       Main.MainInterface();
-	    } 
-	    catch (SQLException e) 
-	    {
-	       System.out.println("서버 오류!!");
-	       e.printStackTrace();
-	    }
+			ps.executeUpdate();   // 실행
+			System.out.println("회원가입 성공! 환영합니다, " + NickName + "님");
+			Main.MainInterface();
+		} 
+		catch (SQLException e) 
+		{
+			System.out.println("서버 오류!!");
+			e.printStackTrace();
+		}
 	}
 	
 	public static void CheckPW() { // 마이페이지 접근을 위한 비밀번호 입력
@@ -354,5 +364,27 @@ public class CreateCustomer {
 		
 		// 마이페이지로 돌아가기
 		MyInfo();
+	}
+	
+	// 아이디 중복 확인 메소드
+	public static boolean checkIdDuplicate(String loginId) {
+		String sql = "SELECT LoginID FROM Customer WHERE LoginID = ?";
+		
+		try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
+		     PreparedStatement ps = conn.prepareStatement(sql)) {
+			
+			ps.setString(1, loginId);
+			
+			try (ResultSet rs = ps.executeQuery()) {
+				// 결과가 있으면 중복 (true 반환)
+				return rs.next();
+			}
+			
+		} catch (SQLException e) {
+			System.out.println("아이디 중복 확인 중 오류가 발생했습니다.");
+			e.printStackTrace();
+			// 오류 발생 시 안전하게 중복으로 처리
+			return true;
+		}
 	}
 }
