@@ -1,13 +1,37 @@
 import java.sql.*;
 import java.util.Scanner;
 
+/**
+ * ===========================================
+ * 
+ * 주요 기능:
+ * - 신규 고객 회원가입 처리
+ * - 고객 정보 조회 및 관리
+ * - 페이 충전 기능
+ * - 비밀번호 변경 기능
+ * - 마이페이지 인터페이스 제공
+ * - 아이디 중복 확인
+ * 
+ * 포함된 메소드:
+ * - Create(): 회원가입 처리
+ * - CheckPW(): 마이페이지 접근을 위한 비밀번호 인증
+ * - MyInfo(): 마이페이지 인터페이스
+ * - CustomerState(): 고객 정보 조회
+ * - PayInterface(): 페이 충전 메뉴
+ * - PayCharging(): 페이 충전 실행
+ * - ChangePassword(): 비밀번호 변경
+ * - checkIdDuplicate(): 아이디 중복 확인
+ * 
+ * ===========================================
+ */
 public class CreateCustomer {
 	static String ID;
 	static String NickName;
 	static String PW;
 	static String name;
 	
-	public static void Create() // 회원가입
+	// 회원가입 - 새 고객 정보 입력 및 데이터베이스 저장
+	public static void Create()
 	{
 		String sql = "INSERT INTO Customer " +
                 "(LoginID, LoginPW, NickName, PayCharge, TotalCharge, Grade) " +
@@ -64,12 +88,13 @@ public class CreateCustomer {
 		} 
 		catch (SQLException e) 
 		{
-			System.out.println("서버 오류!!");
+			System.out.println("\n데이터베이스 오류가 발생했습니다.");
 			e.printStackTrace();
 		}
 	}
 	
-	public static void CheckPW() { // 마이페이지 접근을 위한 비밀번호 입력
+	// 마이페이지 접근을 위한 비밀번호 입력 및 인증
+	public static void CheckPW() {
 	    Scanner sc = new Scanner(System.in);
 
 	    while (true) {
@@ -101,13 +126,14 @@ public class CreateCustomer {
 	                }
 	            }
 	        } catch (SQLException e) {
-	            System.out.println("서버 오류!!");
+	            System.out.println("\n데이터베이스 오류가 발생했습니다.");
 	            e.printStackTrace();
 	        }
 	    }
 	}
 	
-	public static void MyInfo() { // 마이페이지 인터페이스
+	// 마이페이지 인터페이스 - 정보 조회, 페이 충전, 비밀번호 변경 메뉴
+	public static void MyInfo() {
 	    Scanner sc = new Scanner(System.in);
 	    int choose = -1;
 
@@ -122,23 +148,37 @@ public class CreateCustomer {
             String input = sc.nextLine();
             try {
             	choose = Integer.parseInt(input);
-            	if (choose == 1) CustomerState();
-            	else if (choose == 2) PayInterface();
-            	else if (choose == 3) ChangePassword();
+            	if (choose == 1) {
+            		CustomerState();
+            		return;
+            	}
+            	else if (choose == 2) {
+            		PayInterface();
+            		return;
+            	}
+            	else if (choose == 3) {
+            		ChangePassword();
+            		return;
+            	}
             	else if (choose == 0) {
             		Main.MainInterface();
             		return; 
+                }
+                else {
+                	System.out.println();
+                	System.out.println("잘못된 선택입니다. 1-3번 중에서 선택해주세요.");
                 }
             } 
             catch (NumberFormatException e) 
             {
             	System.out.println();
-            	System.out.println("입력이 잘못되었습니다. 다시 입력해주세요.");
+            	System.out.println("올바른 숫자를 입력해주세요.");
             }
 	    }
 	}
 	
-	public static void CustomerState() // 내 정보 조회
+	// 내 정보 조회 - 고객의 개인정보 및 충전액 표시
+	public static void CustomerState()
 	{
 		String sql = "SELECT CustomerID, LoginID, NickName, PayCharge, TotalCharge, Grade " 
 				+ "FROM CUSTOMER WHERE NickName=?";
@@ -169,12 +209,13 @@ public class CreateCustomer {
 			}
 		}
 		catch (SQLException e) {
-			System.out.println("서버 오류!!");
+			System.out.println("\n데이터베이스 오류가 발생했습니다.");
 		    e.printStackTrace();
 		}
 	
 	}
 	
+	// 페이 충전 인터페이스 - 충전 금액 선택 메뉴
 	public static void PayInterface()
 	{
 		Scanner sc = new Scanner(System.in);
@@ -222,11 +263,12 @@ public class CreateCustomer {
 				}
 			} catch (NumberFormatException e) {
 				System.out.println();
-            	System.out.println("입력이 잘못되었습니다. 다시 입력해주세요.");
+            	System.out.println("올바른 숫자를 입력해주세요.");
 			}
 		}
 	}
 	
+	// 페이 충전 실행 - 선택된 금액을 고객 계정에 충전
 	public static void PayCharging(double chargeAmount)
 	{
 		String sql = "UPDATE Customer SET PayCharge = PayCharge + ?, TotalCharge = TotalCharge + ? WHERE NickName = ?";
@@ -266,11 +308,12 @@ public class CreateCustomer {
 			
 		} 
 		catch (SQLException e) {
-			System.out.println("서버 오류!!");
+			System.out.println("\n데이터베이스 오류가 발생했습니다.");
 			e.printStackTrace();
 		}
 	}
 
+	// 비밀번호 변경 - 현재 비밀번호 확인 후 새 비밀번호로 변경
 	public static void ChangePassword()
 	{
 		Scanner sc = new Scanner(System.in);
@@ -311,7 +354,7 @@ public class CreateCustomer {
 				}
 			} catch (SQLException e) {
 				System.out.println();
-				System.out.println("서버 오류가 발생했습니다!");
+				System.out.println("\n데이터베이스 오류가 발생했습니다.");
 				e.printStackTrace();
 				MyInfo();
 				return;
@@ -358,7 +401,7 @@ public class CreateCustomer {
 			}
 			
 		} catch (SQLException e) {
-			System.out.println("서버 오류!!");
+			System.out.println("\n데이터베이스 오류가 발생했습니다.");
 			e.printStackTrace();
 		}
 		
@@ -381,7 +424,7 @@ public class CreateCustomer {
 			}
 			
 		} catch (SQLException e) {
-			System.out.println("아이디 중복 확인 중 오류가 발생했습니다.");
+			System.out.println("\n데이터베이스 오류가 발생했습니다.");
 			e.printStackTrace();
 			// 오류 발생 시 안전하게 중복으로 처리
 			return true;

@@ -1,6 +1,20 @@
 import java.sql.*;
 import java.util.Scanner;
 
+/**
+ * ===========================================
+ * 주요 기능:
+ * - 프로그램 진입점 (main 메소드)
+ * - 메인 인터페이스 제공 (상품검색, 장바구니, 마이페이지 메뉴)
+ * - 데이터베이스 연결 정보 관리
+ * - 전체 애플리케이션의 흐름 제어
+ * 
+ * 포함된 메소드:
+ * - main(): 프로그램 진입점
+ * - MainInterface(): 메인 메뉴 인터페이스
+ * 
+ * ===========================================
+ */
 public class Main {
 	static String url = "jdbc:mysql://localhost:3306/shoppingmall"
 	           + "?useUnicode=true&characterEncoding=UTF-8"
@@ -13,6 +27,7 @@ public class Main {
 		Login.LoginInterface();
 	}
 	
+	// 메인 인터페이스 - 상품검색, 장바구니, 마이페이지 메뉴 제공
 	public static void MainInterface()
 	{
 		Scanner sc = new Scanner(System.in);
@@ -47,17 +62,14 @@ public class Main {
 						System.out.println("프로그램 종료");
                         System.exit(0);
 					}
-					else System.out.println("숫자를 다시 입력해주세요!");
+					else System.out.println("\n잘못된 선택입니다. 1-3번 중에서 선택해주세요.");
 				} 
 				catch (NumberFormatException e) {
-					System.out.println();
-					System.out.println("잘못된 입력입니다.");
+					System.out.println("\n올바른 숫자를 입력해주세요.");
 				}
 				
 			} catch (NumberFormatException e) {
-				System.out.println();
-				System.out.println("입력이 잘못되었습니다. 다시 입력해주세요.");
-				System.out.println();
+				System.out.println("\n올바른 숫자를 입력해주세요.\n");
 			}
 		}
 	}

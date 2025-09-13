@@ -3,7 +3,26 @@ import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.Collections;
 
+/**
+ * ===========================================  
+ * 
+ * 주요 기능:
+ * - 상품 카테고리 목록 조회 및 선택
+ * - 카테고리별 상품 목록 표시
+ * - 상품 선택 및 수량 입력
+ * - 장바구니에 상품 추가
+ * - 재고 확인 및 유효성 검사
+ * 
+ * 포함된 메소드:
+ * - Searching(): 카테고리 목록 조회 및 선택
+ * - SearchByCategory(): 선택된 카테고리의 상품 목록 조회
+ * - addToCart(): 장바구니에 상품 추가
+ * - ProductInfo: 상품 정보를 저장하는 내부 클래스
+ * 
+ * ===========================================
+ */
 public class SearchingProduct {
+	// 상품 검색 메인 메소드 - 카테고리 목록 조회 및 선택
 	public static void Searching()
 	{
 		String sql = "SELECT DISTINCT CategoryName FROM shopdatatable ORDER BY CategoryName";
@@ -31,36 +50,38 @@ public class SearchingProduct {
 			for (int i = 0; i < categories.size(); i++) {
 				System.out.println((i + 1) + ". " + categories.get(i));
 			}
-			
-			System.out.println();
-			System.out.print("카테고리를 선택하세요 (나가기: 0): ");
-			String input = sc.nextLine();
-			
-			try {
-				int choice = Integer.parseInt(input);
-				if (choice == 0) {
-					Main.MainInterface();
-					return;
-				} else if (choice >= 1 && choice <= categories.size()) {
-					String selectedCategory = categories.get(choice - 1);
-					System.out.println("선택된 카테고리: " + selectedCategory);
-					// 선택된 카테고리로 상품 검색하는 로직을 여기에 추가할 수 있습니다
-					SearchByCategory(selectedCategory);
-				} else {
-					System.out.println("잘못된 선택입니다.");
-					Searching();
+			System.out.println("=================");
+			while (true) {
+				System.out.println();
+				System.out.print("카테고리를 선택하세요 (나가기: 0): ");
+				String input = sc.nextLine();
+				
+				try {
+					int choice = Integer.parseInt(input);
+					if (choice == 0) {
+						Main.MainInterface();
+						return;
+					} else if (choice >= 1 && choice <= categories.size()) {
+						String selectedCategory = categories.get(choice - 1);
+						System.out.println("선택된 카테고리: " + selectedCategory);
+						// 선택된 카테고리로 상품 검색하는 로직을 여기에 추가할 수 있습니다
+						SearchByCategory(selectedCategory);
+						return;
+					} else {
+						System.out.println("\n잘못된 선택입니다. 1-" + categories.size() + "번 중에서 선택해주세요.");
+					}
+				} catch (NumberFormatException e) {
+					System.out.println("\n올바른 숫자를 입력해주세요.");
 				}
-			} catch (NumberFormatException e) {
-				System.out.println("숫자를 입력해주세요.");
-				Searching();
 			}
 		}
 		catch (SQLException e) {
-			System.out.println("서버 오류!!");
+			System.out.println("\n데이터베이스 오류가 발생했습니다.");
 			e.printStackTrace();
 		}
 	}
 	
+	// 선택된 카테고리의 상품 목록 조회 및 장바구니 추가
 	public static void SearchByCategory(String categoryName)
 	{
 		String sql = "SELECT ProductID, ProductName, Price, StockQuantity, Origin, CategoryName FROM shopdatatable WHERE CategoryName = ? ORDER BY ProductName";
@@ -79,7 +100,7 @@ public class SearchingProduct {
 				ArrayList<ProductInfo> products = new ArrayList<>();
 				
 				System.out.println();
-				System.out.println("=== " + categoryName + " 카테고리 상품 목록 ===");
+				System.out.println("=== " + categoryName + " 목록 ===");
 				int productNumber = 1;
 				
 	            while (rs.next()) {
@@ -103,7 +124,7 @@ public class SearchingProduct {
 	            
 	            while(true)
 	            {
-	            	System.out.print("구매할 상품을 선택하십시오.(나가기 : 0) : ");
+	            	System.out.print("구매할 상품을 선택하십시오.(카테고리 선택 : 0) : ");
 	            	String input = sc.nextLine();
 	            	try {
 	            		choose = Integer.parseInt(input);
@@ -135,8 +156,8 @@ public class SearchingProduct {
 	            				}
 	            				
 	            				// 장바구니에 추가
-	            				addToCart(selectedProduct.productId, quantity);
-	            				System.out.println(selectedProduct.productName + " " + quantity + "개가 장바구니에 추가되었습니다.");
+	            				addToCart(selectedProduct.productId, selectedProduct.productName, quantity);
+	            				System.out.println(selectedProduct.productName + " " + quantity + "개가 장바구니에 추가되었습니다.\n");
 	            				
 	            			} catch (NumberFormatException e) {
 	            				System.out.println("올바른 숫자를 입력해주세요.");
@@ -144,50 +165,54 @@ public class SearchingProduct {
 	            		}
 	            		else
 	            		{
-	            			System.out.println("잘못된 선택입니다. 다시 선택해주세요.");
+	            			System.out.println("잘못된 선택입니다. 다시 선택해주세요.\n");
 	            		}
 					} 
 	            	catch (NumberFormatException e) {
-	            		System.out.println();
-	    				System.out.println("입력이 잘못되었습니다. 다시 입력해주세요.");
+	            		System.out.println("올바른 숫자를 입력해주세요.");
 	    				System.out.println();
 					}
 	            }
 			}
 			catch (SQLException e) {
-				System.out.println("서버 오류!!");
+				System.out.println("\n데이터베이스 오류가 발생했습니다.");
 				e.printStackTrace();
 			}
 		}
 	}
 	
 	// 장바구니에 상품 추가하는 메소드
-	public static void addToCart(int productId, int quantity)
+	public static void addToCart(int productId, String productName, int quantity)
 	{
-		String sql = "INSERT INTO SHOPCART (CustomerID, ProductID, Quantity) VALUES (?, ?, ?) " +
+		String sql = "INSERT INTO SHOPCART (CustomerID, LoginID, NickName, ProductID, ProductName, Quantity) VALUES (?, ?, ?, ?, ?, ?) " +
 		             "ON DUPLICATE KEY UPDATE Quantity = Quantity + ?";
 		
 		try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
 		     PreparedStatement pstmt = conn.prepareStatement(sql)) 
 		{
-			// 현재 로그인한 고객 ID를 가져옵니다
+			// 현재 로그인한 고객 정보를 가져옵니다
 			int customerId = Login.getCurrentCustomerId();
+			String loginId = Login.getCurrentLoginId();
+			String nickName = Login.getCurrentNickName();
 			
 			pstmt.setInt(1, customerId);
-			pstmt.setInt(2, productId);
-			pstmt.setInt(3, quantity);
-			pstmt.setInt(4, quantity);
+			pstmt.setString(2, loginId);
+			pstmt.setString(3, nickName);
+			pstmt.setInt(4, productId);
+			pstmt.setString(5, productName);
+			pstmt.setInt(6, quantity);
+			pstmt.setInt(7, quantity);
 			
 			int result = pstmt.executeUpdate();
 			
 			if(result > 0) {
-				System.out.println("장바구니에 상품이 추가되었습니다.");
+				System.out.println("\n장바구니에 상품이 추가되었습니다.");
 			} else {
-				System.out.println("장바구니 추가에 실패했습니다.");
+				System.out.println("\n장바구니 추가에 실패했습니다.");
 			}
 			
 		} catch (SQLException e) {
-			System.out.println("장바구니 추가 중 오류가 발생했습니다.");
+			System.out.println("\n데이터베이스 오류가 발생했습니다.");
 			e.printStackTrace();
 		}
 	}
