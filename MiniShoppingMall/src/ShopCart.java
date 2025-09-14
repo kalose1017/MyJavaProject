@@ -12,12 +12,15 @@ import java.util.Scanner;
  * - 장바구니 전체 비우기
  * - 총 금액 계산 및 표시
  * - 장바구니 관리 메뉴 제공
+ * - 구매 기능 연동 (BuyProductInCart 클래스 호출)
  * 
  * 포함된 메소드:
  * - CartInfo(): 장바구니 조회 및 관리 메인 메소드
  * - removeItem(): 상품 삭제
  * - updateQuantity(): 수량 수정
  * - clearCart(): 장바구니 전체 비우기
+ * 
+ * 구매 관련 기능은 BuyProductInCart 클래스에서 처리됩니다.
  * 
  * ===========================================
  */
@@ -57,7 +60,6 @@ public class ShopCart {
 			
 			while (rs.next()) {
 				hasItems = true;
-				int productId = rs.getInt("ProductID");
 				String productName = rs.getString("ProductName");
 				int quantity = rs.getInt("Quantity");
 				double price = rs.getDouble("Price");
@@ -87,6 +89,8 @@ public class ShopCart {
 				System.out.println("1. 상품 삭제");
 				System.out.println("2. 수량 수정");
 				System.out.println("3. 전체 비우기");
+				System.out.println("4. 전체 구매");
+				System.out.println("5. 선택 구매");
 				System.out.println("0. 메인으로 돌아가기");
 				System.out.println("=====================");
 				System.out.print("선택하세요: ");
@@ -103,6 +107,12 @@ public class ShopCart {
 							break;
 						case 3:
 							clearCart();
+							break;
+						case 4:
+							BuyProductInCart.purchaseAll();
+							break;
+						case 5:
+							BuyProductInCart.purchaseSelected();
 							break;
 						case 0:
 							Main.MainInterface();
@@ -310,4 +320,5 @@ public class ShopCart {
 		
 		CartInfo(); // 장바구니 다시 표시
 	}
+	
 }
