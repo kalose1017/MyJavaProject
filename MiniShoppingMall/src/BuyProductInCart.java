@@ -22,8 +22,8 @@ public class BuyProductInCart {
 	
 	// 전체 구매 메소드 - 장바구니의 모든 상품을 구매
 	public static void purchaseAll() {
-		try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
-		     Scanner sc = new Scanner(System.in)) 
+		Scanner sc = new Scanner(System.in);
+		try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass)) 
 		{
 			// 현재 고객 정보 가져오기
 			int customerId = Login.getCurrentCustomerId();
@@ -118,6 +118,7 @@ public class BuyProductInCart {
 								System.out.println("구매 금액: " + totalAmount + "원");
 								System.out.println("남은 잔액: " + (currentBalance - totalAmount) + "원");
 								System.out.println("감사합니다!");
+								Main.MainInterface();
 								
 							} catch (SQLException e) {
 								// 트랜잭션 롤백
@@ -129,6 +130,7 @@ public class BuyProductInCart {
 							
 						} else {
 							System.out.println("구매가 취소되었습니다.");
+							ShopCart.CartInfo();
 						}
 					}
 				}
@@ -137,6 +139,8 @@ public class BuyProductInCart {
 		} catch (SQLException e) {
 			System.out.println("\n데이터베이스 오류가 발생했습니다.");
 			e.printStackTrace();
+		} finally {
+			sc.close();
 		}
 		
 		ShopCart.CartInfo(); // 장바구니 다시 표시
@@ -144,8 +148,8 @@ public class BuyProductInCart {
 	
 	// 선택 구매 메소드 - 장바구니에서 특정 상품만 선택하여 구매
 	public static void purchaseSelected() {
-		try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
-		     Scanner sc = new Scanner(System.in)) 
+		Scanner sc = new Scanner(System.in);
+		try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass)) 
 		{
 			// 현재 고객 정보 가져오기
 			int customerId = Login.getCurrentCustomerId();
@@ -168,9 +172,8 @@ public class BuyProductInCart {
 				
 				System.out.println();
 				System.out.println("======= 선택 구매 =======");
-				System.out.println("구매할 상품의 ProductID를 입력하세요.");
+				System.out.println("구매할 상품의 번호를 입력하세요.");
 				System.out.println("여러 상품을 구매하려면 쉼표로 구분하세요. (예: 1,3,5)");
-				System.out.println("나가려면 0을 입력하세요.");
 				System.out.println("=====================");
 				
 				int itemNumber = 1;
@@ -190,7 +193,7 @@ public class BuyProductInCart {
 					itemNumber++;
 				}
 				
-				System.out.print("구매할 상품의 ProductID를 입력하세요: ");
+				System.out.print("구매할 상품의 번호를 입력하세요(취소 : 0 입력): ");
 				String input = sc.nextLine().trim();
 				
 				if (input.equals("0")) {
@@ -198,16 +201,26 @@ public class BuyProductInCart {
 					return;
 				}
 				
-				// 입력된 ProductID들을 파싱
-				String[] productIds = input.split(",");
+				// 입력된 itemNumber들을 파싱
+				String[] itemNumbers = input.split(",");
 				int totalAmount = 0;
 				
 				// 선택된 상품들의 총 금액 계산 및 유효성 검사
-				for (String productIdStr : productIds) {
+				for (String itemNumberStr : itemNumbers) {
 					try {
-						int productId = Integer.parseInt(productIdStr.trim());
+						int selectedItemNumber = Integer.parseInt(itemNumberStr.trim());
 						
-						// 해당 상품이 장바구니에 있는지 확인
+						// itemNumber로 ProductID와 ProductName 찾기
+						Integer productId = ShopCart.getProductIdByItemNumber(selectedItemNumber);
+						String productName = ShopCart.getProductNameByItemNumber(selectedItemNumber);
+						
+						if (productId == null || productName == null) {
+							System.out.println("번호 " + selectedItemNumber + "에 해당하는 상품을 찾을 수 없습니다.");
+							ShopCart.CartInfo();
+							return;
+						}
+						
+						// 해당 상품의 정보 조회
 						String checkSql = "SELECT sc.ProductID, sc.ProductName, sc.Quantity, sd.Price " +
 						                 "FROM SHOPCART sc " +
 						                 "JOIN SHOPDATATABLE sd ON sc.ProductID = sd.ProductID AND sc.ProductName = sd.ProductName " +
@@ -225,13 +238,13 @@ public class BuyProductInCart {
 								double price = checkRs.getDouble("Price");
 								totalAmount += (int)(price * quantity);
 							} else {
-								System.out.println("ProductID " + productId + "는 장바구니에 없습니다.");
+								System.out.println("번호 " + selectedItemNumber + "에 해당하는 상품을 찾을 수 없습니다.");
 								ShopCart.CartInfo();
 								return;
 							}
 						}
 					} catch (NumberFormatException e) {
-						System.out.println("올바른 ProductID를 입력해주세요: " + productIdStr);
+						System.out.println("올바른 번호를 입력해주세요: " + itemNumberStr);
 						ShopCart.CartInfo();
 						return;
 					}
@@ -288,14 +301,18 @@ public class BuyProductInCart {
 								}
 								
 								// 선택된 상품들만 장바구니에서 삭제
-								for (String productIdStr : productIds) {
-									int productId = Integer.parseInt(productIdStr.trim());
-									String deleteSql = "DELETE FROM SHOPCART WHERE CustomerID = ? AND LoginID = ? AND NickName = ? AND ProductID = ?";
+								for (String itemNumberStr : itemNumbers) {
+									int selectedItemNumber = Integer.parseInt(itemNumberStr.trim());
+									Integer productId = ShopCart.getProductIdByItemNumber(selectedItemNumber);
+									String productName = ShopCart.getProductNameByItemNumber(selectedItemNumber);
+									
+									String deleteSql = "DELETE FROM SHOPCART WHERE CustomerID = ? AND LoginID = ? AND NickName = ? AND ProductID = ? AND ProductName = ?";
 									try (PreparedStatement deletePstmt = conn.prepareStatement(deleteSql)) {
 										deletePstmt.setInt(1, customerId);
 										deletePstmt.setString(2, loginId);
 										deletePstmt.setString(3, nickName);
 										deletePstmt.setInt(4, productId);
+										deletePstmt.setString(5, productName);
 										deletePstmt.executeUpdate();
 									}
 								}
@@ -327,6 +344,8 @@ public class BuyProductInCart {
 		} catch (SQLException e) {
 			System.out.println("\n데이터베이스 오류가 발생했습니다.");
 			e.printStackTrace();
+		} finally {
+			sc.close();
 		}
 		
 		ShopCart.CartInfo(); // 장바구니 다시 표시
