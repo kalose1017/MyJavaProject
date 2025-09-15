@@ -91,6 +91,48 @@ public class BuyProductInCart {
 							conn.setAutoCommit(false);
 							
 							try {
+								// 재고 확인 및 차감
+								String stockCheckSql = "SELECT sc.ProductID, sc.ProductName, sc.Quantity, sd.StockQuantity " +
+								                      "FROM SHOPCART sc " +
+								                      "JOIN SHOPDATATABLE sd ON sc.ProductID = sd.ProductID AND sc.ProductName = sd.ProductName " +
+								                      "WHERE sc.CustomerID = ? AND sc.LoginID = ? AND sc.NickName = ?";
+								
+								try (PreparedStatement stockCheckPstmt = conn.prepareStatement(stockCheckSql)) {
+									stockCheckPstmt.setInt(1, customerId);
+									stockCheckPstmt.setString(2, loginId);
+									stockCheckPstmt.setString(3, nickName);
+									
+									ResultSet stockRs = stockCheckPstmt.executeQuery();
+									
+									// 재고 부족 상품 확인
+									while (stockRs.next()) {
+										int cartQuantity = stockRs.getInt("Quantity");
+										int currentStock = stockRs.getInt("StockQuantity");
+										String productName = stockRs.getString("ProductName");
+										
+										if (currentStock < cartQuantity) {
+											System.out.println("재고 부족으로 구매할 수 없습니다.");
+											System.out.println("상품: " + productName + " (요청: " + cartQuantity + "개, 재고: " + currentStock + "개)");
+											conn.rollback();
+											ShopCart.CartInfo();
+											return;
+										}
+									}
+								}
+								
+								// 재고 차감
+								String stockUpdateSql = "UPDATE SHOPDATATABLE sd " +
+								                       "JOIN SHOPCART sc ON sd.ProductID = sc.ProductID AND sd.ProductName = sc.ProductName " +
+								                       "SET sd.StockQuantity = sd.StockQuantity - sc.Quantity " +
+								                       "WHERE sc.CustomerID = ? AND sc.LoginID = ? AND sc.NickName = ?";
+								
+								try (PreparedStatement stockUpdatePstmt = conn.prepareStatement(stockUpdateSql)) {
+									stockUpdatePstmt.setInt(1, customerId);
+									stockUpdatePstmt.setString(2, loginId);
+									stockUpdatePstmt.setString(3, nickName);
+									stockUpdatePstmt.executeUpdate();
+								}
+								
 								// 잔액 차감
 								String updateSql = "UPDATE Customer SET PayCharge = PayCharge - ? WHERE CustomerID = ? AND LoginID = ? AND NickName = ?";
 								try (PreparedStatement updatePstmt = conn.prepareStatement(updateSql)) {
@@ -290,6 +332,59 @@ public class BuyProductInCart {
 							conn.setAutoCommit(false);
 							
 							try {
+								// 선택된 상품들의 재고 확인
+								for (String itemNumberStr : itemNumbers) {
+									int selectedItemNumber = Integer.parseInt(itemNumberStr.trim());
+									Integer productId = ShopCart.getProductIdByItemNumber(selectedItemNumber);
+									String productName = ShopCart.getProductNameByItemNumber(selectedItemNumber);
+									
+									// 해당 상품의 재고 확인
+									String stockCheckSql = "SELECT sc.Quantity, sd.StockQuantity " +
+									                      "FROM SHOPCART sc " +
+									                      "JOIN SHOPDATATABLE sd ON sc.ProductID = sd.ProductID AND sc.ProductName = sd.ProductName " +
+									                      "WHERE sc.CustomerID = ? AND sc.LoginID = ? AND sc.NickName = ? AND sc.ProductID = ?";
+									
+									try (PreparedStatement stockCheckPstmt = conn.prepareStatement(stockCheckSql)) {
+										stockCheckPstmt.setInt(1, customerId);
+										stockCheckPstmt.setString(2, loginId);
+										stockCheckPstmt.setString(3, nickName);
+										stockCheckPstmt.setInt(4, productId);
+										
+										ResultSet stockRs = stockCheckPstmt.executeQuery();
+										if (stockRs.next()) {
+											int cartQuantity = stockRs.getInt("Quantity");
+											int currentStock = stockRs.getInt("StockQuantity");
+											
+											if (currentStock < cartQuantity) {
+												System.out.println("재고 부족으로 구매할 수 없습니다.");
+												System.out.println("상품: " + productName + " (요청: " + cartQuantity + "개, 재고: " + currentStock + "개)");
+												conn.rollback();
+												ShopCart.CartInfo();
+												return;
+											}
+										}
+									}
+								}
+								
+								// 선택된 상품들의 재고 차감
+								for (String itemNumberStr : itemNumbers) {
+									int selectedItemNumber = Integer.parseInt(itemNumberStr.trim());
+									Integer productId = ShopCart.getProductIdByItemNumber(selectedItemNumber);
+									
+									String stockUpdateSql = "UPDATE SHOPDATATABLE sd " +
+									                       "JOIN SHOPCART sc ON sd.ProductID = sc.ProductID AND sd.ProductName = sc.ProductName " +
+									                       "SET sd.StockQuantity = sd.StockQuantity - sc.Quantity " +
+									                       "WHERE sc.CustomerID = ? AND sc.LoginID = ? AND sc.NickName = ? AND sc.ProductID = ?";
+									
+									try (PreparedStatement stockUpdatePstmt = conn.prepareStatement(stockUpdateSql)) {
+										stockUpdatePstmt.setInt(1, customerId);
+										stockUpdatePstmt.setString(2, loginId);
+										stockUpdatePstmt.setString(3, nickName);
+										stockUpdatePstmt.setInt(4, productId);
+										stockUpdatePstmt.executeUpdate();
+									}
+								}
+								
 								// 잔액 차감
 								String updateSql = "UPDATE Customer SET PayCharge = PayCharge - ? WHERE CustomerID = ? AND LoginID = ? AND NickName = ?";
 								try (PreparedStatement updatePstmt = conn.prepareStatement(updateSql)) {

@@ -80,7 +80,7 @@ public class CreateCustomer {
 			ps.setString(3, NickName); // 닉네임입력
 			ps.setDouble(4, 0);
 			ps.setDouble(5, 0);
-			ps.setString(6, "Bronez");
+			ps.setString(6, "Bronze");
 
 			ps.executeUpdate();   // 실행
 			System.out.println("회원가입 성공! 환영합니다, " + NickName + "님");
@@ -95,9 +95,8 @@ public class CreateCustomer {
 	
 	// 마이페이지 접근을 위한 비밀번호 입력 및 인증
 	public static void CheckPW() {
-	    Scanner sc = new Scanner(System.in);
-
-	    while (true) {
+	    try (Scanner sc = new Scanner(System.in)) {
+		    while (true) {
 	    	System.out.println();
 	        System.out.print("비밀번호를 입력하세요. (나가기 : 0 입력) : ");
 	        String inputPw = sc.nextLine();
@@ -129,20 +128,22 @@ public class CreateCustomer {
 	            System.out.println("\n데이터베이스 오류가 발생했습니다.");
 	            e.printStackTrace();
 	        }
-	    }
+		    }
+		}
 	}
 	
 	// 마이페이지 인터페이스 - 정보 조회, 페이 충전, 비밀번호 변경 메뉴
 	public static void MyInfo() {
-	    Scanner sc = new Scanner(System.in);
-	    int choose = -1;
+	    try (Scanner sc = new Scanner(System.in)) {
+		    int choose = -1;
 
-	    while (true) {
+		    while (true) {
 	    	System.out.println();
             System.out.println("----- " + name + "님의 정보 -----");
             System.out.println("1. 정보 조회");
             System.out.println("2. 페이 충전");
             System.out.println("3. 비밀번호 변경");
+            System.out.println("4. 등급 정보 보기");
             System.out.println("-------------------------");
             System.out.print("서비스를 선택하세요.(나가기 : 0 입력) : ");
             String input = sc.nextLine();
@@ -160,13 +161,17 @@ public class CreateCustomer {
             		ChangePassword();
             		return;
             	}
+            	else if (choose == 4) {
+            		showGradeBenefits();
+            		return;
+            	}
             	else if (choose == 0) {
             		Main.MainInterface();
             		return; 
                 }
                 else {
                 	System.out.println();
-                	System.out.println("잘못된 선택입니다. 1-3번 중에서 선택해주세요.");
+                	System.out.println("잘못된 선택입니다. 1-4번 중에서 선택해주세요.");
                 }
             } 
             catch (NumberFormatException e) 
@@ -174,7 +179,8 @@ public class CreateCustomer {
             	System.out.println();
             	System.out.println("올바른 숫자를 입력해주세요.");
             }
-	    }
+		    }
+		}
 	}
 	
 	// 내 정보 조회 - 고객의 개인정보 및 충전액 표시
@@ -182,7 +188,6 @@ public class CreateCustomer {
 	{
 		String sql = "SELECT CustomerID, LoginID, NickName, PayCharge, TotalCharge, Grade " 
 				+ "FROM CUSTOMER WHERE NickName=?";
-		Scanner sc = new Scanner(System.in);
 		try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
 	         PreparedStatement ps = conn.prepareStatement(sql)) 
 		{
@@ -198,12 +203,19 @@ public class CreateCustomer {
                    double total = rs.getDouble("TotalCharge");
                    String grade = rs.getString("Grade");
 
+                   System.out.println("========== 내 정보 ==========");
                    System.out.println("고객 ID: " + id);
                    System.out.println("로그인 ID: " + loginId);
                    System.out.println("닉네임: " + nick);
-                   System.out.println("충전액: " + Math.round(pay) + "원");
+                   System.out.println("현재 잔액: " + Math.round(pay) + "원");
                    System.out.println("누적 충전액: " + Math.round(total) + "원");
-                   System.out.println("등급: " + grade);
+                   System.out.println("현재 등급: " + grade);
+                   System.out.println("============================");
+                   
+                   // 등급 정보 상세 표시
+                   System.out.println();
+                   System.out.println(CustomerGrade.getGradeInfo(id, loginId, nick));
+                   System.out.println();
                }     
 				MyInfo();
 			}
@@ -218,52 +230,53 @@ public class CreateCustomer {
 	// 페이 충전 인터페이스 - 충전 금액 선택 메뉴
 	public static void PayInterface()
 	{
-		Scanner sc = new Scanner(System.in);
-		int choose = -1;
-		while(true)
-		{
-			System.out.println();
-			System.out.println("------- 충전하실 금액을 선택하세요. -------");
-			System.out.println("1. 10,000원");
-			System.out.println("2. 30,000원");
-			System.out.println("3. 50,000원");
-			System.out.println("4. 100,000원");
-			System.out.println("-------------------------------------");
-			System.out.print("원하시는 금액의 번호를 입력하세요.(나가기 : 0 입력) : ");
-			String input = sc.nextLine();
-			try {
-				choose = Integer.parseInt(input);
-				if(choose == 1)
-				{
-					PayCharging(10000);
-					return;
-				}
-				else if(choose == 2)
-				{
-					PayCharging(30000);
-					return;
-				}
-				else if(choose == 3)
-				{
-					PayCharging(50000);
-					return;
-				}
-				else if(choose == 4)
-				{
-					PayCharging(100000);
-					return;
-				}
-				else if(choose == 0) {
-					MyInfo(); 
-					return;
-				}
-				else {
-					System.out.println();
-					System.out.println("잘못된 번호입니다. 1-4번 중에서 선택해주세요.");
-				}
-			} catch (NumberFormatException e) {
+		try (Scanner sc = new Scanner(System.in)) {
+			int choose = -1;
+			while(true)
+			{
 				System.out.println();
-            	System.out.println("올바른 숫자를 입력해주세요.");
+				System.out.println("------- 충전하실 금액을 선택하세요. -------");
+				System.out.println("1. 10,000원");
+				System.out.println("2. 30,000원");
+				System.out.println("3. 50,000원");
+				System.out.println("4. 100,000원");
+				System.out.println("-------------------------------------");
+				System.out.print("원하시는 금액의 번호를 입력하세요.(나가기 : 0 입력) : ");
+				String input = sc.nextLine();
+				try {
+					choose = Integer.parseInt(input);
+					if(choose == 1)
+					{
+						PayCharging(10000);
+						return;
+					}
+					else if(choose == 2)
+					{
+						PayCharging(30000);
+						return;
+					}
+					else if(choose == 3)
+					{
+						PayCharging(50000);
+						return;
+					}
+					else if(choose == 4)
+					{
+						PayCharging(100000);
+						return;
+					}
+					else if(choose == 0) {
+						MyInfo(); 
+						return;
+					}
+					else {
+						System.out.println();
+						System.out.println("잘못된 번호입니다. 1-4번 중에서 선택해주세요.");
+					}
+				} catch (NumberFormatException e) {
+					System.out.println();
+					System.out.println("올바른 숫자를 입력해주세요.");
+				}
 			}
 		}
 	}
@@ -288,14 +301,33 @@ public class CreateCustomer {
 				System.out.println("충전 금액: " + (int)chargeAmount + "원");
 				System.out.println();
 				
-				// 충전 후 현재 잔액 확인
-				String checkSql = "SELECT PayCharge FROM Customer WHERE NickName = ?";
+				// 충전 후 현재 잔액 및 등급 확인
+				String checkSql = "SELECT CustomerID, LoginID, PayCharge, TotalCharge, Grade FROM Customer WHERE NickName = ?";
 				try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
 					checkPs.setString(1, name);
 					try (ResultSet rs = checkPs.executeQuery()) {
 						if (rs.next()) {
+							int customerId = rs.getInt("CustomerID");
+							String loginId = rs.getString("LoginID");
 							double currentBalance = rs.getDouble("PayCharge");
+							double totalCharge = rs.getDouble("TotalCharge");
+							String oldGrade = rs.getString("Grade");
+							
 							System.out.println("현재 잔액: " + (int)currentBalance + "원");
+							System.out.println("누적 충전액: " + (int)totalCharge + "원");
+							
+							// 등급 업데이트
+							boolean gradeUpdated = CustomerGrade.updateCustomerGrade(customerId, loginId, name);
+							if (gradeUpdated) {
+								// 업데이트된 등급 확인
+								String newGrade = CustomerGrade.calculateGrade(totalCharge);
+								if (!newGrade.equals(oldGrade)) {
+									System.out.println();
+									System.out.println("🎉 등급이 업그레이드되었습니다!");
+									System.out.println("이전 등급: " + oldGrade + " → 새로운 등급: " + newGrade);
+									System.out.println();
+								}
+							}
 						}
 					}
 				}
@@ -316,7 +348,7 @@ public class CreateCustomer {
 	// 비밀번호 변경 - 현재 비밀번호 확인 후 새 비밀번호로 변경
 	public static void ChangePassword()
 	{
-		Scanner sc = new Scanner(System.in);
+		try (Scanner sc = new Scanner(System.in)) {
 		String currentPassword;
 		String newPassword;
 		String confirmPassword;
@@ -407,6 +439,7 @@ public class CreateCustomer {
 		
 		// 마이페이지로 돌아가기
 		MyInfo();
+		}
 	}
 	
 	// 아이디 중복 확인 메소드
@@ -428,6 +461,18 @@ public class CreateCustomer {
 			e.printStackTrace();
 			// 오류 발생 시 안전하게 중복으로 처리
 			return true;
+		}
+	}
+	
+	// 등급 혜택 정보 표시
+	public static void showGradeBenefits() {
+		try (Scanner sc = new Scanner(System.in)) {
+			System.out.println();
+			System.out.println(CustomerGrade.getGradeBenefits());
+			System.out.println();
+			System.out.print("마이페이지로 돌아가려면 Enter를 누르세요...");
+			sc.nextLine();
+			MyInfo();
 		}
 	}
 }
