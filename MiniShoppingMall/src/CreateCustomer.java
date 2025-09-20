@@ -28,7 +28,7 @@ public class CreateCustomer {
 	static String ID;
 	static String NickName;
 	static String PW;
-	static String name;
+	public static String name;
 	
 	// 회원가입 - 새 고객 정보 입력 및 데이터베이스 저장
 	public static void Create()
@@ -240,6 +240,7 @@ public class CreateCustomer {
 				System.out.println("2. 30,000원");
 				System.out.println("3. 50,000원");
 				System.out.println("4. 100,000원");
+				System.out.println("[현재 잔액 : " + Math.round(getCurrentPayBalance()) + "원]");				
 				System.out.println("-------------------------------------");
 				System.out.print("원하시는 금액의 번호를 입력하세요.(나가기 : 0 입력) : ");
 				String input = sc.nextLine();
@@ -475,4 +476,51 @@ public class CreateCustomer {
 			MyInfo();
 		}
 	}
+	
+	// 현재 로그인한 사용자의 페이 잔액을 조회하는 메서드
+	private static double getCurrentPayBalance() {
+		String sql = "SELECT PayCharge FROM Customer WHERE NickName = ?";
+		
+		try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
+		     PreparedStatement pstmt = conn.prepareStatement(sql)) {
+			
+			pstmt.setString(1, name);
+			
+			try (ResultSet rs = pstmt.executeQuery()) {
+				if (rs.next()) {
+					return rs.getDouble("PayCharge");
+				}
+			}
+			
+		} catch (SQLException e) {
+			System.out.println("잔액 조회 중 오류가 발생했습니다.");
+			e.printStackTrace();
+		}
+		
+		return 0.0; // 오류 시 0 반환
+	}
+	
+	// 현재 로그인한 사용자의 등급을 조회화는 메서드
+	public static String getCurrentGrade() {
+ 		String sql = "SELECT GRADE FROM Customer WHERE NickName = ?";
+ 		
+ 		try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
+ 		     PreparedStatement pstmt = conn.prepareStatement(sql)) {
+ 			
+ 			pstmt.setString(1, name);
+ 			
+ 			try (ResultSet rs = pstmt.executeQuery()) {
+ 				if (rs.next()) {
+ 					return rs.getString("GRADE");
+ 				}
+ 			}
+ 			
+ 		} catch (SQLException e) {
+ 			System.out.println("등급 조회 중 오류가 발생했습니다.");
+ 			e.printStackTrace();
+ 		}
+ 		
+ 		return "Error";
+ 	}		 	
+
 }

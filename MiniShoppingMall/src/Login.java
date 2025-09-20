@@ -85,6 +85,9 @@ public class Login {
 	                	currentCustomerName = rs.getString("NickName");
 	                	currentLoginId = ID;
 	                	
+	                	// CreateCustomer 클래스의 name 변수도 설정
+	                	CreateCustomer.name = currentCustomerName;
+	                	
 	                	System.out.println();
 	                    System.out.println("로그인 성공! 환영합니다, " + currentCustomerName + "님");
 	                    Main.MainInterface();

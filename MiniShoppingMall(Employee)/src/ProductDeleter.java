@@ -4,8 +4,6 @@ import java.util.Scanner;
 /**
  * ===========================================
  * 
- * 물품 삭제 클래스
- * 
  * 주요 기능:
  * - 물품 목록 조회
  * - 특정 물품 선택
@@ -25,7 +23,7 @@ public class ProductDeleter {
 	
 	// 물품 삭제 메인 메소드
 	public static void deleteProduct() {
-		Scanner sc = new Scanner(System.in);
+		Scanner sc = Main.getScanner();
 		
 		System.out.println();
 		System.out.println("========== 물품 삭제 ==========");
@@ -78,7 +76,7 @@ public class ProductDeleter {
 			
 			// 삭제 확인
 			System.out.println();
-			System.out.println("⚠️  경고: 이 작업은 되돌릴 수 없습니다!");
+			System.out.println("경고: 이 작업은 되돌릴 수 없습니다!");
 			System.out.print("정말로 이 물품을 삭제하시겠습니까? (y/n): ");
 			String confirm = sc.nextLine().trim();
 			
@@ -106,58 +104,38 @@ public class ProductDeleter {
 			
 		} catch (Exception e) {
 			System.out.println("오류가 발생했습니다: " + e.getMessage());
-		} finally {
-			sc.close();
 		}
 		
 		// 메인 메뉴로 돌아가기
-		System.out.println();
-		System.out.print("메인 메뉴로 돌아가려면 Enter를 누르세요...");
-		try (Scanner returnSc = new Scanner(System.in)) {
-			returnSc.nextLine();
-		}
 		Main.MainInterface();
 	}
 	
 	// 물품 목록 표시
 	private static boolean showProductList() {
-		String sql = "SELECT ProductID, ProductName, Price, StockQuantity, Origin, CategoryName " +
-		             "FROM shopdatatable ORDER BY ProductID";
+		String sql = "SELECT ProductID, ProductName FROM shopdatatable ORDER BY ProductID";
 		
 		try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
 		     PreparedStatement pstmt = conn.prepareStatement(sql);
 		     ResultSet rs = pstmt.executeQuery()) {
 			
 			System.out.println();
-			System.out.println("========== 물품 목록 ==========");
-			System.out.printf("%-5s %-20s %-10s %-8s %-15s %-15s%n", 
-			                 "ID", "상품명", "가격", "재고", "원산지", "카테고리");
-			System.out.println("================================================");
+			System.out.println("========= 물품 목록 =========");
 			
 			boolean hasProducts = false;
 			while (rs.next()) {
 				hasProducts = true;
 				int productId = rs.getInt("ProductID");
 				String productName = rs.getString("ProductName");
-				double price = rs.getDouble("Price");
-				int stockQuantity = rs.getInt("StockQuantity");
-				String origin = rs.getString("Origin");
-				String category = rs.getString("CategoryName");
 				
-				System.out.printf("%-5d %-20s %-10d %-8d %-15s %-15s%n",
-				                 productId, 
-				                 productName.length() > 20 ? productName.substring(0, 17) + "..." : productName,
-				                 (int)price, 
-				                 stockQuantity,
-				                 origin.length() > 15 ? origin.substring(0, 12) + "..." : origin,
-				                 category.length() > 15 ? category.substring(0, 12) + "..." : category);
+				System.out.println("품목ID: " + productId);
+				System.out.println("품목명: " + productName);
+				System.out.println("------------------------");
 			}
 			
 			if (!hasProducts) {
 				System.out.println("등록된 물품이 없습니다.");
 			}
 			
-			System.out.println("================================================");
 			return hasProducts;
 			
 		} catch (SQLException e) {

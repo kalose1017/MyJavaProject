@@ -38,6 +38,7 @@ public class Main {
 			try {
 				System.out.println();
 				System.out.println("----- JihoMarket에 오신 것을 환영합니다! -----");
+				System.out.println("[등급 : " + CreateCustomer.getCurrentGrade() + "]");
 				System.out.println("1. 상품검색");
 				System.out.println("2. 장바구니");
 				System.out.println("3. 마이페이지");
