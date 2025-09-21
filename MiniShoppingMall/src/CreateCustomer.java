@@ -33,9 +33,26 @@ public class CreateCustomer {
 	// 회원가입 - 새 고객 정보 입력 및 데이터베이스 저장
 	public static void Create()
 	{
+		// 먼저 다음 CustomerID를 가져오기
+		String getNextIdSql = "SELECT COALESCE(MAX(CustomerID), 0) + 1 AS nextId FROM Customer";
+		int nextCustomerId = 1;
+		
+		try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
+		     PreparedStatement ps = conn.prepareStatement(getNextIdSql)) {
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					nextCustomerId = rs.getInt("nextId");
+				}
+			}
+		} catch (SQLException e) {
+			System.out.println("CustomerID 조회 중 오류가 발생했습니다.");
+			e.printStackTrace();
+			return;
+		}
+		
 		String sql = "INSERT INTO Customer " +
-                "(LoginID, LoginPW, NickName, PayCharge, TotalCharge, Grade) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+                "(CustomerID, LoginID, LoginPW, NickName, PayCharge, TotalCharge, Grade) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
 		
 		try (Scanner sc = new Scanner(System.in);
 		     Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
@@ -55,8 +72,19 @@ public class CreateCustomer {
 				}
 			}
 			
-			System.out.print("닉네임을 입력하세요. : ");
-			NickName = sc.nextLine();
+			// 닉네임 입력 및 중복 확인
+			while(true)
+			{
+				System.out.print("닉네임을 입력하세요. : ");
+				NickName = sc.nextLine();
+				if(checkNicknameDuplicate(NickName)) {
+					System.out.println("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.");
+					continue;
+				} else {
+					System.out.println("사용 가능한 닉네임입니다.");
+					break;
+				}
+			}
 			
 			// 비밀번호 입력 (4자리 이상 검증)
 			while(true)
@@ -75,15 +103,50 @@ public class CreateCustomer {
 				if(rePW.equals(PW)) break;
 				else System.out.println("비밀번호가 일치하지 않습니다! 다시 입력해주세요.");
 			}
-			ps.setString(1, ID); // 로그인ID 입력
-			ps.setString(2, PW); // 로그인PW 입력
-			ps.setString(3, NickName); // 닉네임입력
-			ps.setDouble(4, 0);
+			
+			// 최종 확인
+			System.out.println();
+			System.out.println("========== 회원가입 정보 확인 ==========");
+			System.out.println("아이디: " + ID);
+			System.out.println("닉네임: " + NickName);
+			System.out.println("비밀번호: " + PW);
+			System.out.println("=====================================");
+			System.out.println();
+			
+			while(true) {
+				System.out.print("회원가입을 완료하시겠습니까? (y: 완료, n: 다시 입력): ");
+				String confirm = sc.nextLine().toLowerCase();
+				
+				if(confirm.equals("y")) {
+					break;
+				} else if(confirm.equals("n")) {
+					System.out.println();
+					System.out.println("회원가입을 다시 시작합니다.");
+					Create(); // 재귀 호출로 처음부터 다시 시작
+					return;
+				} else {
+					System.out.println("y 또는 n을 입력해주세요.");
+				}
+			}
+			
+			ps.setInt(1, nextCustomerId); // CustomerID 입력
+			ps.setString(2, ID); // 로그인ID 입력
+			ps.setString(3, PW); // 로그인PW 입력
+			ps.setString(4, NickName); // 닉네임입력
 			ps.setDouble(5, 0);
-			ps.setString(6, "Bronze");
+			ps.setDouble(6, 0);
+			ps.setString(7, "Bronze");
 
 			ps.executeUpdate();   // 실행
-			System.out.println("회원가입 성공! 환영합니다, " + NickName + "님");
+			
+			// 회원가입 성공 후 로그인 정보 설정
+			name = NickName;
+			
+			// Login 클래스의 로그인 정보도 설정 (장바구니 등에서 사용)
+			Login.setLoginInfo(nextCustomerId, NickName, ID);
+			
+			System.out.println();
+			System.out.println("$ 회원가입 성공! 환영합니다, " + NickName + "님 $");
 			Main.MainInterface();
 		} 
 		catch (SQLException e) 
@@ -144,6 +207,7 @@ public class CreateCustomer {
             System.out.println("2. 페이 충전");
             System.out.println("3. 비밀번호 변경");
             System.out.println("4. 등급 정보 보기");
+            System.out.println("5. 회원 탈퇴");
             System.out.println("-------------------------");
             System.out.print("서비스를 선택하세요.(나가기 : 0 입력) : ");
             String input = sc.nextLine();
@@ -165,13 +229,17 @@ public class CreateCustomer {
             		showGradeBenefits();
             		return;
             	}
+            	else if (choose == 5) {
+            		deleteAccount();
+            		return;
+            	}
             	else if (choose == 0) {
             		Main.MainInterface();
             		return; 
                 }
                 else {
                 	System.out.println();
-                	System.out.println("잘못된 선택입니다. 1-4번 중에서 선택해주세요.");
+                	System.out.println("잘못된 선택입니다. 1-5번 중에서 선택해주세요.");
                 }
             } 
             catch (NumberFormatException e) 
@@ -212,10 +280,6 @@ public class CreateCustomer {
                    System.out.println("현재 등급: " + grade);
                    System.out.println("============================");
                    
-                   // 등급 정보 상세 표시
-                   System.out.println();
-                   System.out.println(CustomerGrade.getGradeInfo(id, loginId, nick));
-                   System.out.println();
                }     
 				MyInfo();
 			}
@@ -464,6 +528,25 @@ public class CreateCustomer {
 			return true;
 		}
 	}
+
+	public static boolean checkNicknameDuplicate(String nickname) {
+		String sql = "SELECT NickName FROM Customer WHERE NickName = ?";
+		try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
+		     PreparedStatement ps = conn.prepareStatement(sql)) {
+			ps.setString(1, nickname);
+
+			try (ResultSet rs = ps.executeQuery()) {
+				// 결과가 있으면 중복 (true 반환)
+				return rs.next();
+			}
+		}
+		catch (SQLException e) {
+			System.out.println("\n데이터베이스 오류가 발생했습니다.");
+			e.printStackTrace();
+			// 오류 발생 시 안전하게 중복으로 처리
+			return true;
+		}
+	}
 	
 	// 등급 혜택 정보 표시
 	public static void showGradeBenefits() {
@@ -521,6 +604,96 @@ public class CreateCustomer {
  		}
  		
  		return "Error";
- 	}		 	
+ 	}
+ 	
+ 	// 회원 탈퇴 기능
+ 	public static void deleteAccount() {
+ 	    try (Scanner sc = new Scanner(System.in)) {
+ 	        System.out.println();
+ 	        System.out.println("----- 회원 탈퇴 -----");
+ 	        System.out.println("정말로 회원 탈퇴를 하시겠습니까?");
+ 	        System.out.println("탈퇴하시려면 'DELETE'를 정확히 입력하고 비밀번호를 확인해주세요.");
+ 	        System.out.print("DELETE 입력 (나가기: 0) : ");
+ 	        String input = sc.nextLine();
+ 	        
+ 	        if ("0".equals(input)) {
+ 	            MyInfo();
+ 	            return;
+ 	        }
+ 	        
+ 	        if (!"DELETE".equals(input)) {
+ 	            System.out.println();
+ 	            System.out.println("'DELETE'를 정확히 입력해주세요.");
+ 	            deleteAccount();
+ 	            return;
+ 	        }
+ 	        
+ 	        // 비밀번호 확인
+ 	        System.out.print("비밀번호를 입력하세요: ");
+ 	        String password = sc.nextLine();
+ 	        
+ 	        // 비밀번호 검증
+ 	        String checkSql = "SELECT LoginPW FROM Customer WHERE NickName = ?";
+ 	        try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
+ 	             PreparedStatement ps = conn.prepareStatement(checkSql)) {
+ 	            
+ 	            ps.setString(1, name);
+ 	            try (ResultSet rs = ps.executeQuery()) {
+ 	                if (rs.next()) {
+ 	                    String dbPassword = rs.getString("LoginPW");
+ 	                    if (!password.equals(dbPassword)) {
+ 	                        System.out.println();
+ 	                        System.out.println("비밀번호가 일치하지 않습니다.");
+ 	                        deleteAccount();
+ 	                        return;
+ 	                    }
+ 	                } else {
+ 	                    System.out.println();
+ 	                    System.out.println("사용자 정보를 찾을 수 없습니다.");
+ 	                    MyInfo();
+ 	                    return;
+ 	                }
+ 	            }
+ 	        } catch (SQLException e) {
+ 	            System.out.println();
+ 	            System.out.println("데이터베이스 오류가 발생했습니다.");
+ 	            e.printStackTrace();
+ 	            MyInfo();
+ 	            return;
+ 	        }
+ 	        
+ 	        // 회원 탈퇴 실행
+ 	        String deleteSql = "DELETE FROM Customer WHERE NickName = ?";
+ 	        try (Connection conn = DriverManager.getConnection(Main.url, Main.user, Main.pass);
+ 	             PreparedStatement ps = conn.prepareStatement(deleteSql)) {
+ 	            
+ 	            ps.setString(1, name);
+ 	            int rows = ps.executeUpdate();
+ 	            
+ 	            if (rows > 0) {
+ 	                System.out.println();
+ 	                System.out.println("회원 탈퇴가 완료되었습니다.");
+ 	                System.out.println("이용해주셔서 감사합니다.");
+ 	                
+ 	                // 로그인 정보 초기화
+ 	                Login.logout();
+ 	                name = "";
+ 	                
+ 	                // 로그인 화면으로 돌아가기
+ 	                Login.LoginInterface();
+ 	            } else {
+ 	                System.out.println();
+ 	                System.out.println("회원 탈퇴에 실패했습니다. 다시 시도해주세요.");
+ 	                MyInfo();
+ 	            }
+ 	            
+ 	        } catch (SQLException e) {
+ 	            System.out.println();
+ 	            System.out.println("데이터베이스 오류가 발생했습니다.");
+ 	            e.printStackTrace();
+ 	            MyInfo();
+ 	        }
+ 	    }
+ 	}
 
 }

@@ -53,6 +53,13 @@ public class Login {
 		currentLoginId = "";
 	}
 	
+	// 로그인 정보 설정 메소드 (회원가입 후 사용)
+	public static void setLoginInfo(int customerId, String customerName, String loginId) {
+		currentCustomerId = customerId;
+		currentCustomerName = customerName;
+		currentLoginId = loginId;
+	}
+	
 	// 프로그램 초기 로그인 화면 - 아이디/비밀번호 입력 및 인증
 	public static void LoginInterface()
 	{	

@@ -123,7 +123,8 @@ public class ShopCart {
 	
 	// 장바구니 메뉴 표시 및 처리 메소드
 	public static void showCartMenu(boolean hasItems) {
-		try (Scanner sc = new Scanner(System.in)) {
+		Scanner sc = new Scanner(System.in);
+		try {
 			if (hasItems) {
 			System.out.println("1. 상품 삭제");
 			System.out.println("2. 수량 수정");
