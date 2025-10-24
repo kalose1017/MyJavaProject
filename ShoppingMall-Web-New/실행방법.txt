@@ -1,0 +1,61 @@
+=============================================
+    YuhanMarket 웹 서버 실행 방법
+=============================================
+
+🚀 빠른 실행 (권장)
+1. 명령 프롬프트(cmd) 열기
+2. 프로젝트 폴더로 이동: cd "C:\Users\leeji\OneDrive\바탕 화면\MyJavaProject\ShoppingMall-Web-New"
+3. 서버 시작: node config/server.js
+4. 브라우저에서 http://localhost:8080 접속
+
+📋 수동 실행 방법
+
+1. 명령 프롬프트(cmd) 열기
+2. 프로젝트 폴더로 이동: cd "C:\Users\leeji\OneDrive\바탕 화면\MyJavaProject\ShoppingMall-Web-New"
+3. 서버 시작: node config/server.js
+4. 브라우저에서 http://localhost:8080 접속
+
+🌐 서버 정보
+- 통합 서버 (웹사이트 + API): http://localhost:8080
+- 접속 주소: http://localhost:8080
+
+🛑 서버 종료
+- 각 터미널에서 Ctrl+C 누르기
+
+⚠️ 문제 해결
+- Python이 설치되어 있지 않다면: https://www.python.org/downloads/
+- Node.js가 설치되어 있지 않다면: https://nodejs.org/
+- MySQL이 실행되지 않았다면: MySQL 서버 시작 필요
+- 포트가 사용 중이라면: 다른 포트 사용하거나 기존 프로세스 종료
+
+📁 프로젝트 구조
+ShoppingMall-Web-New/
+├── index.html              # 메인 페이지
+├── config/                 # 설정 파일들
+│   ├── server.js           # 통합 서버 (Node.js + Express)
+│   ├── package.json        # Node.js 의존성
+│   └── package-lock.json   # 의존성 잠금 파일
+├── css/                    # 스타일 파일들
+│   ├── common.css          # 공통 스타일
+│   └── main.css            # 메인 스타일
+├── js/                     # JavaScript 파일들
+│   ├── main.js             # 메인 애플리케이션
+│   ├── auth.js             # 인증 관련
+│   ├── database.js         # 데이터베이스 API
+│   ├── products.js         # 상품 관련
+│   ├── cart.js             # 장바구니 관련
+│   └── mypage.js           # 마이페이지 관련
+└── README.md              # 프로젝트 설명
+
+🎯 주요 기능
+- 로그인/회원가입 (MySQL 연동)
+- 상품 검색 및 카테고리 필터
+- 장바구니 관리
+- 구매 기능
+- 마이페이지 (페이 충전, 비밀번호 변경)
+
+💡 팁
+- 서버가 시작되면 터미널 창을 닫지 마세요
+- 브라우저에서 새로고침(F5)으로 변경사항 확인
+- 개발자 도구(F12)로 오류 확인 가능
+- MySQL 서버가 실행 중이어야 정상 동작

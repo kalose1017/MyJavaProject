@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko">
+<!--
+===========================================
+YuhanMarket 메인 HTML (index.html)
+===========================================
+
+주요 구성:
+- SPA (Single Page Application) 구조
+- 4개 메인 화면: 로그인, 홈, 상품검색, 장바구니, 마이페이지
+- 모달: 회원가입, 장바구니 추가, 닉네임 변경, 비밀번호 변경, 등급 안내, 페이 충전
+
+화면 구조:
+1. 로그인 화면 (loginScreen) - 로그인 폼
+2. 회원가입 화면 (signupScreen) - 회원가입 폼
+3. 메인 화면 (mainScreen)
+   - 헤더: 로고, 네비게이션, 사용자 정보, 페이 충전, 로그아웃
+   - 홈 (homeScreen): 환영 메시지, 등급 표시, 빠른 액션 카드
+   - 상품검색 (productsScreen): 검색바, 필터, 정렬, 상품 그리드
+   - 장바구니 (cartScreen): 장바구니 아이템 목록, 전체 비우기/구매
+   - 마이페이지 (mypageScreen): 사용자 정보, 닉네임/비밀번호 변경, 등급 안내
+
+모달:
+- addCartModal: 장바구니 추가 (레거시, 현재 미사용)
+- changeNicknameModal: 닉네임 변경
+- changePwModal: 비밀번호 변경
+- gradeGuideModal: 등급 안내
+- chargeModal: 페이 충전
+
+===========================================
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YuhanMarket - 온라인 쇼핑몰</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <!-- 로그인 화면 -->
+    <div id="loginScreen" class="screen active">
+        <div class="login-container">
+            <div class="login-box">
+                <div class="logo">
+                    <span class="logo-icon">🛒</span>
+                    <h1>YuhanMarket</h1>
+                </div>
+                <form id="loginForm" class="login-form">
+                    <div class="form-group">
+                        <label for="loginId">아이디</label>
+                        <input type="text" id="loginId" name="loginId" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPw">비밀번호</label>
+                        <input type="password" id="loginPw" name="loginPw" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">로그인</button>
+                    <button type="button" id="signupBtn" class="btn btn-secondary btn-full">회원가입</button>
+                </form>
+                <div id="loginError" class="error-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 회원가입 화면 -->
+    <div id="signupScreen" class="screen">
+        <div class="signup-container">
+            <div class="signup-box">
+                <div class="logo">
+                    <span class="logo-icon">🛒</span>
+                    <h1>YuhanMarket 회원가입</h1>
+                </div>
+                <form id="signupForm" class="signup-form">
+                    <div class="form-group">
+                        <label for="signupId">아이디</label>
+                        <input type="text" id="signupId" name="signupId" required>
+                        <button type="button" id="checkIdBtn" class="btn btn-small">중복확인</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPw">비밀번호</label>
+                        <input type="password" id="signupPw" name="signupPw" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupNickName">닉네임</label>
+                        <input type="text" id="signupNickName" name="signupNickName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPhone">전화번호</label>
+                        <input type="tel" id="signupPhone" name="signupPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupAddress">주소</label>
+                        <input type="text" id="signupAddress" name="signupAddress" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">회원가입</button>
+                    <button type="button" id="backToLoginBtn" class="btn btn-secondary btn-full">로그인으로 돌아가기</button>
+                </form>
+                <div id="signupError" class="error-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 화면 -->
+    <div id="mainScreen" class="screen">
+        <!-- 헤더 -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <span class="logo-icon">🛒</span>
+                    <span class="logo-text">YuhanMarket</span>
+                </div>
+                <nav class="nav-menu">
+                    <button class="nav-btn active" data-screen="home">홈</button>
+                    <button class="nav-btn" data-screen="products">상품검색</button>
+                    <button class="nav-btn" data-screen="cart">장바구니</button>
+                    <button class="nav-btn" data-screen="mypage">마이페이지</button>
+                </nav>
+                <div class="user-section">
+                    <span id="userInfo">고객님</span>
+                    <button id="headerChargeBtn" class="btn btn-success btn-sm">💰 페이 충전</button>
+                    <button id="logoutBtn" class="btn btn-secondary btn-sm">로그아웃</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 메인 컨텐츠 -->
+        <main class="main-content">
+            <!-- 홈 화면 -->
+            <div id="homeScreen" class="content-screen active">
+                <div class="welcome-section">
+                    <h1>YuhanMarket에 오신 것을 환영합니다!</h1>
+                    <div id="userGrade" class="grade-info"></div>
+                    <div class="quick-actions">
+                        <button class="action-card" data-screen="products">
+                            <span class="action-icon">🔍</span>
+                            <h3>상품검색</h3>
+                            <p>다양한 상품을 찾아보세요</p>
+                        </button>
+                        <button class="action-card" data-screen="cart">
+                            <span class="action-icon">🛒</span>
+                            <h3>장바구니</h3>
+                            <p>담은 상품을 확인하세요</p>
+                        </button>
+                        <button class="action-card" data-screen="mypage">
+                            <span class="action-icon">👤</span>
+                            <h3>마이페이지</h3>
+                            <p>내 정보를 관리하세요</p>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상품검색 화면 -->
+            <div id="productsScreen" class="content-screen">
+                <div class="page-header">
+                    <h1>🔍 상품 검색</h1>
+                </div>
+                <div class="search-section">
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="상품명을 입력하세요...">
+                        <button id="searchBtn" class="btn btn-primary">검색</button>
+                    </div>
+                    <div class="filter-section">
+                        <label>카테고리:</label>
+                        <select id="categoryFilter">
+                            <option value="">전체</option>
+                        </select>
+                    </div>
+                    <div class="filter-section">
+                        <label>정렬:</label>
+                        <select id="sortFilter">
+                            <option value="name_asc">가나다 오름차순</option>
+                            <option value="name_desc">가나다 내림차순</option>
+                            <option value="price_asc">가격 오름차순</option>
+                            <option value="price_desc">가격 내림차순</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="productsContainer" class="products-grid">
+                    <!-- 상품 목록이 여기에 동적으로 생성됩니다 -->
+                </div>
+                <div id="emptyMessage" class="empty-message" style="display: none;">
+                    <div class="empty-icon">📦</div>
+                    <p>검색 결과가 없습니다.</p>
+                </div>
+            </div>
+
+            <!-- 장바구니 화면 -->
+            <div id="cartScreen" class="content-screen">
+                <div class="page-header">
+                    <h1>🛒 장바구니</h1>
+                </div>
+                <div id="cartContainer" class="cart-container">
+                    <!-- 장바구니 목록이 여기에 동적으로 생성됩니다 -->
+                </div>
+                <div id="cartEmpty" class="empty-message" style="display: none;">
+                    <div class="empty-icon">🛒</div>
+                    <p>장바구니가 비어있습니다.</p>
+                </div>
+            </div>
+
+            <!-- 마이페이지 화면 -->
+            <div id="mypageScreen" class="content-screen">
+                <div class="page-header">
+                    <h1>👤 마이페이지</h1>
+                </div>
+                <div class="mypage-content">
+                    <div class="user-info-card">
+                        <h3>내 정보</h3>
+                        <div id="userInfoDisplay"></div>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="changeNicknameBtn" class="btn btn-primary">닉네임 변경</button>
+                        <button id="changePwBtn" class="btn btn-primary">비밀번호 변경</button>
+                        <button id="gradeGuideBtn" class="btn btn-info">등급 안내</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 모달들 -->
+    <!-- 장바구니 추가 모달 -->
+    <div id="addCartModal" class="modal">
+        <div class="modal-content">
+            <h3>장바구니에 추가</h3>
+            <p id="modalProductName"></p>
+            <div class="form-group">
+                <label>수량:</label>
+                <input type="number" id="modalQuantity" value="1" min="1">
+            </div>
+            <div class="modal-buttons">
+                <button id="confirmAddCart" class="btn btn-primary">추가</button>
+                <button id="cancelAddCart" class="btn btn-secondary">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 닉네임 변경 모달 -->
+    <div id="changeNicknameModal" class="modal">
+        <div class="modal-content">
+            <h3>닉네임 변경</h3>
+            <div class="form-group">
+                <label>새 닉네임:</label>
+                <input type="text" id="newNickname" placeholder="새 닉네임을 입력하세요" required>
+            </div>
+            <div class="modal-buttons">
+                <button id="confirmChangeNickname" class="btn btn-primary">변경</button>
+                <button id="cancelChangeNickname" class="btn btn-secondary">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 비밀번호 변경 모달 -->
+    <div id="changePwModal" class="modal">
+        <div class="modal-content">
+            <h3>비밀번호 변경</h3>
+            <div class="form-group">
+                <label>현재 비밀번호:</label>
+                <input type="password" id="currentPw" required>
+            </div>
+            <div class="form-group">
+                <label>새 비밀번호:</label>
+                <input type="password" id="newPw" required>
+            </div>
+            <div class="form-group">
+                <label>새 비밀번호 확인:</label>
+                <input type="password" id="confirmNewPw" required>
+            </div>
+            <div class="modal-buttons">
+                <button id="confirmChangePw" class="btn btn-primary">변경</button>
+                <button id="cancelChangePw" class="btn btn-secondary">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 등급 안내 모달 -->
+    <div id="gradeGuideModal" class="modal">
+        <div class="modal-content modal-large">
+            <h3>💎 등급 안내</h3>
+            <div id="gradeGuideContent" class="grade-guide-content">
+                <!-- 등급 안내 내용이 동적으로 생성됩니다 -->
+            </div>
+            <div class="modal-buttons">
+                <button id="closeGradeGuide" class="btn btn-primary">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이 충전 모달 -->
+    <div id="chargeModal" class="modal">
+        <div class="modal-content">
+            <h3>💰 페이 충전</h3>
+            <div class="form-group">
+                <label>충전할 금액:</label>
+                <input type="number" id="chargeAmount" min="1000" step="1000" placeholder="최소 1,000원">
+            </div>
+            <div class="modal-buttons">
+                <button id="confirmCharge" class="btn btn-primary">충전</button>
+                <button id="cancelCharge" class="btn btn-secondary">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/products.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/mypage.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
