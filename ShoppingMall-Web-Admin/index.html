@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<!--
+===========================================
+YuhanMarket 운영자 시스템 HTML (index.html)
+===========================================
+
+주요 구성:
+- SPA (Single Page Application) 구조
+- 화면: 로그인, 대시보드, 상품관리, 카테고리관리
+- 모달: 상품 추가/수정, 카테고리 추가
+
+화면 구조:
+1. 로그인 화면 (loginScreen) - 운영자 로그인 폼
+2. 메인 화면 (mainScreen)
+   - 헤더: 로고, 네비게이션, 로그아웃
+   - 대시보드 (dashboardScreen): 통계 정보, 빠른 액션
+   - 상품관리 (productsScreen): 상품 목록, 추가/수정/삭제
+   - 카테고리관리 (categoriesScreen): 카테고리 목록, 추가/삭제
+
+모달:
+- addProductModal: 상품 추가
+- editProductModal: 상품 수정
+- addCategoryModal: 카테고리 추가
+
+===========================================
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YuhanMarket 운영자 시스템</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <!-- 로그인 화면 -->
+    <div id="loginScreen" class="screen active">
+        <div class="login-container">
+            <div class="login-box">
+                <div class="logo">
+                    <span class="logo-icon">🔧</span>
+                    <h1>YuhanMarket</h1>
+                    <p class="subtitle">운영자 시스템</p>
+                </div>
+                <form id="loginForm" class="login-form">
+                    <div class="form-group">
+                        <label for="username">아이디</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">비밀번호</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">로그인</button>
+                </form>
+                <div id="loginError" class="error-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 화면 -->
+    <div id="mainScreen" class="screen">
+        <!-- 헤더 -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <span class="logo-icon">🔧</span>
+                    <span class="logo-text">YuhanMarket 운영자</span>
+                </div>
+                <nav class="nav-menu">
+                    <button class="nav-btn active" data-screen="dashboard">대시보드</button>
+                    <button class="nav-btn" data-screen="products">상품관리</button>
+                    <button class="nav-btn" data-screen="categories">카테고리관리</button>
+                </nav>
+                <div class="user-section">
+                    <span id="adminInfo">관리자님</span>
+                    <button id="logoutBtn" class="btn btn-secondary btn-sm">로그아웃</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 메인 컨텐츠 -->
+        <main class="main-content">
+            <!-- 대시보드 화면 -->
+            <div id="dashboardScreen" class="content-screen active">
+                <div class="page-header">
+                    <h1>📊 대시보드</h1>
+                </div>
+                <div class="dashboard-section">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">📦</div>
+                            <div class="stat-info">
+                                <h3>전체 상품</h3>
+                                <p id="totalProducts" class="stat-value">0개</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📁</div>
+                            <div class="stat-info">
+                                <h3>카테고리</h3>
+                                <p id="totalCategories" class="stat-value">0개</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⚠️</div>
+                            <div class="stat-info">
+                                <h3>재고 부족</h3>
+                                <p id="lowStock" class="stat-value">0개</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-info">
+                                <h3>총 재고 가치</h3>
+                                <p id="totalValue" class="stat-value">0원</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <h2>빠른 작업</h2>
+                        <div class="action-grid">
+                            <button class="action-card" id="quickAddCategory">
+                                <span class="action-icon">📁</span>
+                                <h3>카테고리 추가</h3>
+                                <p>새로운 카테고리 생성</p>
+                            </button>
+                            <button class="action-card" data-screen="products">
+                                <span class="action-icon">📦</span>
+                                <h3>상품 관리</h3>
+                                <p>상품 조회 및 수정</p>
+                            </button>
+                            <button class="action-card" data-screen="categories">
+                                <span class="action-icon">🗂️</span>
+                                <h3>카테고리 관리</h3>
+                                <p>카테고리 조회 및 관리</p>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상품관리 화면 -->
+            <div id="productsScreen" class="content-screen">
+                <div class="page-header">
+                    <h1>📦 상품 관리</h1>
+                    <button id="addProductBtn" class="btn btn-primary">➕ 상품 추가</button>
+                </div>
+                
+                <div class="search-section">
+                    <div class="search-bar">
+                        <input type="text" id="productSearchInput" placeholder="상품명으로 검색...">
+                        <button id="productSearchBtn" class="btn btn-primary">검색</button>
+                    </div>
+                    <div class="filter-section">
+                        <label>카테고리:</label>
+                        <select id="productCategoryFilter">
+                            <option value="">전체</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="productsTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>상품ID</th>
+                                <th>상품명</th>
+                                <th>카테고리</th>
+                                <th>가격</th>
+                                <th>재고</th>
+                                <th>원산지</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 상품 목록이 동적으로 생성됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="productsEmpty" class="empty-message" style="display: none;">
+                    <div class="empty-icon">📦</div>
+                    <p>등록된 상품이 없습니다.</p>
+                </div>
+            </div>
+
+            <!-- 카테고리관리 화면 -->
+            <div id="categoriesScreen" class="content-screen">
+                <div class="page-header">
+                    <h1>📁 카테고리 관리</h1>
+                    <button id="addCategoryBtn" class="btn btn-primary">➕ 카테고리 추가</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="categoriesTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>카테고리 ID</th>
+                                <th>카테고리명</th>
+                                <th>상품 수</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 카테고리 목록이 동적으로 생성됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="categoriesEmpty" class="empty-message" style="display: none;">
+                    <div class="empty-icon">📁</div>
+                    <p>등록된 카테고리가 없습니다.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 모달들 -->
+    
+    <!-- 상품 추가 모달 -->
+    <div id="addProductModal" class="modal">
+        <div class="modal-content">
+            <h3>📦 상품 추가</h3>
+            <form id="addProductForm">
+                <div class="form-group">
+                    <label for="addProductCategory">카테고리 *</label>
+                    <select id="addProductCategory" required>
+                        <option value="">카테고리 선택</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="addProductName">상품명 *</label>
+                    <input type="text" id="addProductName" required>
+                </div>
+                <div class="form-group">
+                    <label for="addProductPrice">가격 (원) *</label>
+                    <input type="number" id="addProductPrice" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="addProductStock">재고량 (개) *</label>
+                    <input type="number" id="addProductStock" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="addProductOrigin">원산지</label>
+                    <input type="text" id="addProductOrigin" placeholder="미입력">
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn btn-primary">추가</button>
+                    <button type="button" id="cancelAddProduct" class="btn btn-secondary">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 상품 수정 모달 -->
+    <div id="editProductModal" class="modal">
+        <div class="modal-content">
+            <h3>✏️ 상품 수정</h3>
+            <form id="editProductForm">
+                <input type="hidden" id="editProductId">
+                <div class="form-group">
+                    <label>상품 ID</label>
+                    <input type="text" id="editProductIdDisplay" disabled>
+                </div>
+                <div class="form-group">
+                    <label>카테고리</label>
+                    <input type="text" id="editProductCategory" disabled>
+                </div>
+                <div class="form-group">
+                    <label for="editProductName">상품명 *</label>
+                    <input type="text" id="editProductName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editProductPrice">가격 (원) *</label>
+                    <input type="number" id="editProductPrice" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editProductStock">재고량 (개) *</label>
+                    <input type="number" id="editProductStock" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editProductOrigin">원산지</label>
+                    <input type="text" id="editProductOrigin">
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn btn-primary">수정</button>
+                    <button type="button" id="cancelEditProduct" class="btn btn-secondary">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 카테고리 추가 모달 -->
+    <div id="addCategoryModal" class="modal">
+        <div class="modal-content">
+            <h3>📁 카테고리 추가</h3>
+            <form id="addCategoryForm">
+                <div class="form-group">
+                    <label for="addCategoryName">카테고리명 *</label>
+                    <input type="text" id="addCategoryName" placeholder="예: 의류, 식품, 전자제품" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn btn-primary">추가</button>
+                    <button type="button" id="cancelAddCategory" class="btn btn-secondary">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/categories.js"></script>
+    <script src="js/products.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
+
